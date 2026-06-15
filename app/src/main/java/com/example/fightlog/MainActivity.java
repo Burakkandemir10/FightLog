@@ -113,7 +113,9 @@ public class MainActivity extends AppCompatActivity {
                         float speedMps = location.getSpeed();
                         float speedKmph = speedMps * 3.6f;
 
-                        tvLiveDistance.setText(String.format(Locale.US, "%.2f km", distanceTraveled));
+                        // Eski: tvLiveDistance.setText(String.format(java.util.Locale.US, "%.1f km", distanceTraveled));
+                    // Yeni:
+                        tvLiveDistance.setText(String.format(java.util.Locale.US, "%.2f km", distanceTraveled));
                         tvLiveSpeed.setText(String.format(Locale.US, "%.1f km/h", speedKmph));
                     }
                     lastLocation = location;
@@ -286,9 +288,14 @@ public class MainActivity extends AppCompatActivity {
 
         // GPS'i Ateşle (Sadece Koşu ise)
         if (currentMode == 3) {
+
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 2, locationListener);
+                // startWorkout içindeki GPS bloğuna ekle:
+                Toast.makeText(this, "GPS Motoru ateşlendi, uydu bekleniyor...", Toast.LENGTH_SHORT).show();
             }
+            // startWorkout'un en sonuna:
+            lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         }
     }
 

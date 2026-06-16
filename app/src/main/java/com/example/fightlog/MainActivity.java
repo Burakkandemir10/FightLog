@@ -12,6 +12,7 @@ import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -34,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     // --- UI (Arayüz) Elemanları ---
     private Spinner spinnerExerciseType;
+    private Button btnBackToHome;
     private EditText etRounds, etRoundTime, etRestTime;
     private TextView tvStatus, tvRoundInfo, tvTimer;
     private Button btnStartPause, btnReset, btnHistory;
@@ -74,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -90,7 +93,22 @@ public class MainActivity extends AppCompatActivity {
         btnStartPause = findViewById(R.id.btnStartPause);
         btnReset = findViewById(R.id.btnReset);
         btnHistory = findViewById(R.id.btnHistory);
+        btnBackToHome = findViewById(R.id.btnBackToHome);
+        btnBackToHome.setOnClickListener(v -> {
+            // 1. Önce yaylanma animasyonunu tetikle (Kullanıcı butona bastığını hissetsin)
+            v.startAnimation(AnimationUtils.loadAnimation(this, R.anim.button_press));
 
+            // 2. Handler ile 150 milisaniye (0.15 saniye) bekle ki animasyon oynayabilsin
+            new android.os.Handler().postDelayed(() -> {
+
+                // 3. Ekranı kapat ve RAM'den temizle
+                finish();
+
+                // 4. Küt diye kapanmasın, karanlığın içinden sinematik (fade) bir geçiş yapsın
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+
+            }, 150); // Buradaki 150, bekleme süresidir.
+        });
         layoutBoxingSettings = findViewById(R.id.layoutBoxingSettings);
         layoutCardioSettings = findViewById(R.id.layoutCardioSettings);
         layoutLiveStats = findViewById(R.id.layoutLiveStats);
@@ -104,21 +122,48 @@ public class MainActivity extends AppCompatActivity {
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
-            public void onLocationChanged(@NonNull Location location) {
-                if (currentState == TimerState.WORK && spinnerExerciseType.getSelectedItemPosition() == 3) {
-                    if (lastLocation != null) {
-                        float distanceInMeters = lastLocation.distanceTo(location);
-                        distanceTraveled += (distanceInMeters / 1000f);
+            public void onLocationChanged(Location location) {
+                // 1. KATI DOĞRULUK FİLTRESİ: Hata payı 10 metreden büyükse (Evin içi, kapalı alan) reddet!
+                if (!location.hasAccuracy() || location.getAccuracy() > 10.0f) {
+                    return;
+                }
 
-                        float speedMps = location.getSpeed();
-                        float speedKmph = speedMps * 3.6f;
-
-                        // Eski: tvLiveDistance.setText(String.format(java.util.Locale.US, "%.1f km", distanceTraveled));
-                    // Yeni:
-                        tvLiveDistance.setText(String.format(java.util.Locale.US, "%.2f km", distanceTraveled));
-                        tvLiveSpeed.setText(String.format(Locale.US, "%.1f km/h", speedKmph));
-                    }
+                if (lastLocation == null) {
                     lastLocation = location;
+                    return;
+                }
+
+                float distanceInMeters = lastLocation.distanceTo(location);
+
+                // Hız Hesaplaması
+                float speedKmH = 0.0f;
+                if (location.hasSpeed()) {
+                    speedKmH = location.getSpeed() * 3.6f; // m/s to km/h
+                } else {
+                    long timeDelta = location.getTime() - lastLocation.getTime();
+                    if (timeDelta > 0) {
+                        speedKmH = (distanceInMeters / (timeDelta / 1000.0f)) * 3.6f;
+                    }
+                }
+
+                // 2. USAIN BOLT FİLTRESİ: İnsan 35 km/h'den hızlı koşamaz!
+                // Veya saniyeler içinde 40 metreden fazla ışınlanamaz!
+                if (speedKmH > 35.0f || distanceInMeters > 40.0f) {
+                    lastLocation = location; // Saçma sapmayı yut, ama sayaca ekleme.
+                    return;
+                }
+
+                // 3. MİNİMUM ADIM FİLTRESİ: 4 metreden az yer değiştirmeleri (GPS titremesini) yoksay.
+                if (distanceInMeters > 4.0f) {
+                    distanceTraveled += (distanceInMeters / 1000.0); // Kilometreye çevir ve ekle
+                    lastLocation = location;
+
+                    // Arayüzü Güncelle
+                    tvLiveDistance.setText(String.format(java.util.Locale.US, "%.2f km", distanceTraveled));
+                    tvLiveSpeed.setText(String.format(java.util.Locale.US, "%.1f km/h", speedKmH));
+                } else if (speedKmH < 2.0f) {
+                    // Duraklama veya aşırı yavaşlama durumunda hızı sıfırla ki 60'ta takılı kalmasın
+                    tvLiveSpeed.setText("0.0 km/h");
                 }
             }
         };
@@ -185,11 +230,14 @@ public class MainActivity extends AppCompatActivity {
         // 5. Buton Dinleyicileri
         btnStartPause.setOnClickListener(v -> toggleTimer());
 
+// onCreate İçindeki YENİ btnReset Tıklama Olayı:
         btnReset.setOnClickListener(v -> {
             if (currentState == TimerState.WORK || currentState == TimerState.PAUSED) {
-                finishWorkout(); // Kaydet ve Bitir
+                // İdman devam ediyorsa veya duraklatıldıysa bitirme fonksiyonunu çağır
+                finishWorkout();
             } else {
-                resetTimer(); // Sıfırla
+                // Zaten hazır moddaysa sistemi sıfırla
+                resetTimer();
             }
         });
 
@@ -388,6 +436,8 @@ public class MainActivity extends AppCompatActivity {
         }
         lastLocation = null;
         updateUI();
+
+        showWorkoutSummaryDialog();
     }
 
     // --- YARDIMCI FONKSİYONLAR ---
@@ -447,6 +497,66 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // --- VERİTABANI İŞLEMLERİ ---
+
+    private void showWorkoutSummaryDialog() {
+        int currentMode = spinnerExerciseType.getSelectedItemPosition();
+
+        // 1. RASYONEL KONTROL: Eğer mod Sparring(0) veya Heavy Bag(1) ise bu pencereyi HİÇ AÇMA.
+        // Kullanıcı zaten WORKOUT COMPLETE yazısını görecek, işi bitince RESET'e basacak.
+        if (currentMode <= 1) {
+            return;
+        }
+
+        // Sadece Kardiyo (2 ve 3) ise pencereyi kurmaya başla
+        android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.setContentView(R.layout.dialog_workout_summary);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.setCancelable(false);
+
+        // Arayüz Elemanlarını Bağla
+        TextView tvDialogClose = dialog.findViewById(R.id.tvDialogClose);
+        TextView tvDialogTime = dialog.findViewById(R.id.tvDialogTime);
+        TextView tvDialogDistance = dialog.findViewById(R.id.tvDialogDistance);
+        TextView tvDialogSpeed = dialog.findViewById(R.id.tvDialogSpeed);
+        TextView tvDialogCalories = dialog.findViewById(R.id.tvDialogCalories);
+
+        // Gizlemek/Göstermek için başlıkları (Label) bağla
+        TextView tvLabelDistance = dialog.findViewById(R.id.tvLabelDistance);
+        TextView tvLabelSpeed = dialog.findViewById(R.id.tvLabelSpeed);
+
+        // Ortak Veriler: Süre ve Kalori her iki kardiyoda da var
+        int minutes = elapsedTime / 60;
+        int seconds = elapsedTime % 60;
+        tvDialogTime.setText(String.format(Locale.US, "%02d:%02d", minutes, seconds));
+        tvDialogCalories.setText(String.format(Locale.US, "%d kcal", (int)caloriesBurned));
+
+        // 2. BAĞLAMSAL FİLTRELEME
+        if (currentMode == 2) {
+            // İP ATLAMA: Mesafe ve Hız saçmalığı ekrandan tamamen silinir (GONE)
+            tvLabelDistance.setVisibility(View.GONE);
+            tvDialogDistance.setVisibility(View.GONE);
+            tvLabelSpeed.setVisibility(View.GONE);
+            tvDialogSpeed.setVisibility(View.GONE);
+
+        } else if (currentMode == 3) {
+            // KOŞU: Mesafe ve Hız hesaplanıp ekrana yazdırılır
+            float totalHours = elapsedTime / 3600.0f;
+            float avgSpeedKmH = 0.0f;
+            if (totalHours > 0 && distanceTraveled > 0) {
+                avgSpeedKmH = (float) (distanceTraveled / totalHours);
+            }
+            tvDialogDistance.setText(String.format(Locale.US, "%.2f km", distanceTraveled));
+            tvDialogSpeed.setText(String.format(Locale.US, "%.1f km/h", avgSpeedKmH));
+        }
+
+        // X Butonu Olayı
+        tvDialogClose.setOnClickListener(v -> {
+            dialog.dismiss();
+            resetTimer();
+        });
+
+        dialog.show();
+    }
 
     private void saveWorkoutToDb() {
         DatabaseHelper dbHelper = new DatabaseHelper(this);

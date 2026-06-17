@@ -18,7 +18,7 @@ public class HistoryActivity extends AppCompatActivity {
     private ListView listViewHistory;
     private DatabaseHelper dbHelper;
 
-    // Pano (Dashboard) Elemanları
+    // Dashboard UI elements
     private TextView tvTotalSessions, tvTotalVolume, tvTotalMinutes;
 
     @Override
@@ -37,7 +37,7 @@ public class HistoryActivity extends AppCompatActivity {
 
         btnBack.setOnClickListener(v -> finish());
 
-        // Metodları sırayla ateşliyoruz
+        // Initialize and load data sequentially
         loadStatistics();
         loadHistoryData();
     }
@@ -45,7 +45,7 @@ public class HistoryActivity extends AppCompatActivity {
     private void loadStatistics() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        // MÜHENDİSLİK ŞOVU: COUNT ile oturum sayısını, SUM ile toplam hacmi ve dakikayı çekiyoruz.
+        // Calculate total sessions, total volume, and total duration using SQL aggregate functions
         String statQuery = "SELECT COUNT(s.id), SUM(d.volume), SUM(d.duration) " +
                 "FROM " + DatabaseHelper.TABLE_WORKOUT_SESSIONS + " s " +
                 "JOIN " + DatabaseHelper.TABLE_WORKOUT_DETAILS + " d ON s.id = d.session_id";
@@ -54,7 +54,8 @@ public class HistoryActivity extends AppCompatActivity {
 
         if (cursor.moveToFirst()) {
             int totalSessions = cursor.getInt(0);
-            // Eğer veritabanı boşsa SUM metodları null dönebilir, bu yüzden jilet gibi bir kontrol yapıyoruz
+
+            // Handle potential null values from SUM operations if the database is empty
             int totalVolume = cursor.isNull(1) ? 0 : (int) cursor.getFloat(1);
             int totalMinutes = cursor.isNull(2) ? 0 : cursor.getInt(2);
 
@@ -84,7 +85,7 @@ public class HistoryActivity extends AppCompatActivity {
                 String date = cursor.getString(0);
                 String exerciseName = cursor.getString(1);
 
-                // Hacim ondalıklı olabilir (örn: 5.2 km), rasyonel bir kontrol yapalım.
+                // Format volume to remove decimal if it's a whole number (e.g., 5.0 -> 5)
                 float floatVolume = cursor.getFloat(2);
                 String volumeStr = (floatVolume % 1 == 0) ? String.valueOf((int)floatVolume) : String.valueOf(floatVolume);
 

@@ -1,4 +1,4 @@
-package com.example.fightlog; // Kendi paket adının yazdığından emin ol
+package com.example.fightlog;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -7,15 +7,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 /**
- * FightLog veritabanı yöneticisi.
- * 3NF mimarisine uygun, ilişkisel (relational) tablo yapılarını içerir.
+ * Database manager for FightLog.
+ * Implements a relational database schema adhering to 3NF standards.
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "FightLog.db";
     private static final int DATABASE_VERSION = 2;
 
-    // Tablo İsimleri
+    // Table Names
     public static final String TABLE_EXERCISE_TYPES = "ExerciseTypes";
     public static final String TABLE_WORKOUT_SESSIONS = "WorkoutSessions";
     public static final String TABLE_WORKOUT_DETAILS = "WorkoutDetails";
@@ -26,41 +26,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // 1. Egzersiz Türleri Tablosu (Sabit veriler ve ölçü birimleri)
+        // 1. Exercise Types Table (Static data and measurement units)
         String createExerciseTypesTable = "CREATE TABLE " + TABLE_EXERCISE_TYPES + " ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "name TEXT NOT NULL, "
                 + "unit TEXT NOT NULL)";
         db.execSQL(createExerciseTypesTable);
 
-        // 2. Antrenman Oturumları Tablosu (Genel tarih ve toplam süre)
+        // 2. Workout Sessions Table (General date and total duration)
         String createWorkoutSessionsTable = "CREATE TABLE " + TABLE_WORKOUT_SESSIONS + " ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "date TEXT DEFAULT CURRENT_TIMESTAMP, "
-                + "total_duration INTEGER)"; // dakika cinsinden
+                + "total_duration INTEGER)"; // Duration in minutes
         db.execSQL(createWorkoutSessionsTable);
 
+        // 3. Workout Details Table (Session specific metrics and foreign keys)
         String createWorkoutDetailsTable = "CREATE TABLE " + TABLE_WORKOUT_DETAILS + " ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "session_id INTEGER, "
                 + "exercise_type_id INTEGER, "
                 + "volume REAL, "
                 + "duration INTEGER, "
-                + "distance REAL DEFAULT 0, "      // YENİ: Koşu için kilometre
-                + "calories REAL DEFAULT 0, "      // YENİ: Yakılan kalori
-                + "avg_speed REAL DEFAULT 0, "     // YENİ: Ortalama hız (km/s)
+                + "distance REAL DEFAULT 0, "      // Distance for cardio (in km)
+                + "calories REAL DEFAULT 0, "      // Calories burned
+                + "avg_speed REAL DEFAULT 0, "     // Average speed (in km/h)
                 + "FOREIGN KEY(session_id) REFERENCES " + TABLE_WORKOUT_SESSIONS + "(id), "
                 + "FOREIGN KEY(exercise_type_id) REFERENCES " + TABLE_EXERCISE_TYPES + "(id))";
         db.execSQL(createWorkoutDetailsTable);
 
-        // Veritabanı ilk oluştuğunda sabit idman türlerini (Sparring, Torba vs.) otomatik ekleyelim
+        // Automatically insert default exercise types upon initial database creation
         insertInitialExerciseTypes(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < 2) {
-            // Sürüm 1'den 2'ye geçiş yapıyorsak eski verileri koruyup yeni kolonları ekliyoruz
+            // Migrate from version 1 to 2: Retain existing data while adding new metric columns
             db.execSQL("ALTER TABLE " + TABLE_WORKOUT_DETAILS + " ADD COLUMN distance REAL DEFAULT 0");
             db.execSQL("ALTER TABLE " + TABLE_WORKOUT_DETAILS + " ADD COLUMN calories REAL DEFAULT 0");
             db.execSQL("ALTER TABLE " + TABLE_WORKOUT_DETAILS + " ADD COLUMN avg_speed REAL DEFAULT 0");
@@ -68,7 +69,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * Uygulama ilk kez açıldığında ölçü birimleriyle birlikte temel idmanları sisteme kaydeder.
+     * Inserts the foundational exercise types and their respective units into the system.
      */
     private void insertInitialExerciseTypes(SQLiteDatabase db) {
         ContentValues values = new ContentValues();
@@ -91,13 +92,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * Veritabanını temizler ve sadece belirtilen sayıdaki en yeni kaydı tutar.
+     * Purges old database records, retaining only the specified number of recent workouts.
+     * Enforces referential integrity during the deletion process.
      */
     public void keepOnlyRecentWorkouts(int limit) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        // Belirlediğimiz limitin (örneğin 30) DIŞINDA kalan eski kayıtların ID'lerini buluyoruz.
-        // DESC (Yeniden eskiye) sırala, ilk 30'u atla (OFFSET), kalanları getir.
+        // Identify IDs of obsolete records that fall outside the specified limit.
+        // Order by descending ID and use OFFSET to skip the records we want to keep.
         String query = "SELECT id FROM " + TABLE_WORKOUT_SESSIONS + " ORDER BY id DESC LIMIT -1 OFFSET " + limit;
         Cursor cursor = db.rawQuery(query, null);
 
@@ -105,12 +107,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             do {
                 int obsoleteSessionId = cursor.getInt(0);
 
-                // DOBRA MÜHENDİSLİK DETAYI:
-                // Önce alt tabloyu (WorkoutDetails) temizlemek zorundayız.
-                // Eğer direkt ana oturumu silersek, detay tablosundaki kayıtlar "Yetim Kayıt" (Orphan Data) olarak kalır ve sistemi çökertir.
+                // Enforce referential integrity: Delete child records (WorkoutDetails) first
+                // to prevent orphan data and potential database constraints violations.
                 db.delete(TABLE_WORKOUT_DETAILS, "session_id = ?", new String[]{String.valueOf(obsoleteSessionId)});
 
-                // Detaylar silindikten sonra ana oturumu (WorkoutSessions) siliyoruz.
+                // Delete the parent record (WorkoutSessions) after child dependencies are cleared.
                 db.delete(TABLE_WORKOUT_SESSIONS, "id = ?", new String[]{String.valueOf(obsoleteSessionId)});
 
             } while (cursor.moveToNext());
@@ -119,5 +120,4 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         db.close();
     }
-
 }

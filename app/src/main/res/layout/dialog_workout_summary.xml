@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="320dp"
     android:layout_height="wrap_content"
-    android:background="#1E1E1E"
+    android:background="@color/bg_card_dark"
     android:orientation="vertical"
     android:padding="20dp">
 
@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:text="WORKOUT SUMMARY 🥊"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -28,7 +28,7 @@
             android:layout_centerVertical="true"
             android:padding="5dp"
             android:text="X"
-            android:textColor="#FF5722"
+            android:textColor="@color/accent_deep_orange"
             android:textSize="22sp"
             android:textStyle="bold" />
     </RelativeLayout>
@@ -36,19 +36,19 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#333333"
+        android:background="@color/divider_color"
         android:layout_marginBottom="16dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Elapsed Time:"
-        android:textColor="#AAAAAA" />
+        android:textColor="@color/text_secondary" />
     <TextView
         android:id="@+id/tvDialogTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/text_primary"
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginBottom="10dp"/>
@@ -58,12 +58,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Total Distance:"
-        android:textColor="#AAAAAA" />
+        android:textColor="@color/text_secondary" />
     <TextView
         android:id="@+id/tvDialogDistance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/text_primary"
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginBottom="10dp"/>
@@ -73,12 +73,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Average Speed:"
-        android:textColor="#AAAAAA" />
+        android:textColor="@color/text_secondary" />
     <TextView
         android:id="@+id/tvDialogSpeed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/text_primary"
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginBottom="10dp"/>
@@ -87,12 +87,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Calories Burned:"
-        android:textColor="#AAAAAA" />
+        android:textColor="@color/text_secondary" />
     <TextView
         android:id="@+id/tvDialogCalories"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FF5722"
+        android:textColor="@color/accent_deep_orange"
         android:textSize="24sp"
         android:textStyle="bold" />
 

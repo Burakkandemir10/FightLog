@@ -33,42 +33,45 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    // --- UI (Arayüz) Elemanları ---
+    // UI Components
     private Spinner spinnerExerciseType;
-    private Button btnBackToHome;
+
+    // Navigation Buttons
+    private Button btnTopBack, btnReturnToMainMenu;
+
     private EditText etRounds, etRoundTime, etRestTime;
     private TextView tvStatus, tvRoundInfo, tvTimer;
     private Button btnStartPause, btnReset, btnHistory;
 
-    // Dinamik Paneller ve Canlı İstatistikler
+    // Dynamic Layouts & Live Stats
     private LinearLayout layoutBoxingSettings, layoutCardioSettings, layoutLiveStats;
     private TextView tvGpsWarning, tvLiveDistance, tvLiveCalories, tvLiveSpeed;
 
-    // --- Durum Makinesi (State Machine) ---
+    // State Machine
     private enum TimerState { READY, WORK, REST, PAUSED, FINISHED }
     private TimerState currentState = TimerState.READY;
     private TimerState previousState = TimerState.READY;
 
-    // --- Boks (Geri Sayım) Değişkenleri ---
+    // Boxing Mode Variables (Countdown)
     private int totalRounds = 12;
     private int roundTimeLimit = 180;
     private int restTimeLimit = 60;
     private int currentRound = 1;
     private int timeRemaining = 0;
 
-    // --- Kardiyo (İleri Sayım) Değişkenleri ---
+    // Cardio Mode Variables (Count-up)
     private boolean isCountUpMode = false;
     private int elapsedTime = 0;
     private float distanceTraveled = 0;
     private float caloriesBurned = 0;
 
-    // --- Motorlar ---
+    // Core Handlers & Audio
     private Handler handler = new Handler();
     private Runnable timerRunnable;
     private SoundPool soundPool;
     private int gongSoundId, warningSoundId;
 
-    // --- GPS ve Konum ---
+    // GPS & Location Services
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
     private LocationManager locationManager;
     private LocationListener locationListener;
@@ -76,11 +79,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 1. UI Bağlantıları
+        // Initialize UI components
         spinnerExerciseType = findViewById(R.id.spinnerExerciseType);
         etRounds = findViewById(R.id.etRounds);
         etRoundTime = findViewById(R.id.etRoundTime);
@@ -93,22 +95,27 @@ public class MainActivity extends AppCompatActivity {
         btnStartPause = findViewById(R.id.btnStartPause);
         btnReset = findViewById(R.id.btnReset);
         btnHistory = findViewById(R.id.btnHistory);
-        btnBackToHome = findViewById(R.id.btnBackToHome);
-        btnBackToHome.setOnClickListener(v -> {
-            // 1. Önce yaylanma animasyonunu tetikle (Kullanıcı butona bastığını hissetsin)
+
+        // Setup top back button with press animation
+        btnTopBack = findViewById(R.id.btnTopBack);
+        btnTopBack.setOnClickListener(v -> {
             v.startAnimation(AnimationUtils.loadAnimation(this, R.anim.button_press));
-
-            // 2. Handler ile 150 milisaniye (0.15 saniye) bekle ki animasyon oynayabilsin
             new android.os.Handler().postDelayed(() -> {
-
-                // 3. Ekranı kapat ve RAM'den temizle
                 finish();
-
-                // 4. Küt diye kapanmasın, karanlığın içinden sinematik (fade) bir geçiş yapsın
                 overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-
-            }, 150); // Buradaki 150, bekleme süresidir.
+            }, 150);
         });
+
+        // Setup return to main menu button with press animation
+        btnReturnToMainMenu = findViewById(R.id.btnReturnToMainMenu);
+        btnReturnToMainMenu.setOnClickListener(v -> {
+            v.startAnimation(AnimationUtils.loadAnimation(this, R.anim.button_press));
+            new android.os.Handler().postDelayed(() -> {
+                finish();
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            }, 150);
+        });
+
         layoutBoxingSettings = findViewById(R.id.layoutBoxingSettings);
         layoutCardioSettings = findViewById(R.id.layoutCardioSettings);
         layoutLiveStats = findViewById(R.id.layoutLiveStats);
@@ -118,15 +125,13 @@ public class MainActivity extends AppCompatActivity {
         tvLiveCalories = findViewById(R.id.tvLiveCalories);
         tvLiveSpeed = findViewById(R.id.tvLiveSpeed);
 
-        // 2. GPS Motoru Kurulumu
+        // Initialize GPS Location Listener
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                // 1. KATI DOĞRULUK FİLTRESİ: Hata payı 10 metreden büyükse (Evin içi, kapalı alan) reddet!
-                if (!location.hasAccuracy() || location.getAccuracy() > 10.0f) {
-                    return;
-                }
+                // Ignore inaccurate location data (accuracy > 10 meters)
+                if (!location.hasAccuracy() || location.getAccuracy() > 10.0f) return;
 
                 if (lastLocation == null) {
                     lastLocation = location;
@@ -134,11 +139,11 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 float distanceInMeters = lastLocation.distanceTo(location);
-
-                // Hız Hesaplaması
                 float speedKmH = 0.0f;
+
+                // Calculate current speed
                 if (location.hasSpeed()) {
-                    speedKmH = location.getSpeed() * 3.6f; // m/s to km/h
+                    speedKmH = location.getSpeed() * 3.6f;
                 } else {
                     long timeDelta = location.getTime() - lastLocation.getTime();
                     if (timeDelta > 0) {
@@ -146,69 +151,61 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                // 2. USAIN BOLT FİLTRESİ: İnsan 35 km/h'den hızlı koşamaz!
-                // Veya saniyeler içinde 40 metreden fazla ışınlanamaz!
+                // Filter unrealistic movements (Speed > 35km/h or teleportation > 40m)
                 if (speedKmH > 35.0f || distanceInMeters > 40.0f) {
-                    lastLocation = location; // Saçma sapmayı yut, ama sayaca ekleme.
+                    lastLocation = location;
                     return;
                 }
 
-                // 3. MİNİMUM ADIM FİLTRESİ: 4 metreden az yer değiştirmeleri (GPS titremesini) yoksay.
+                // Update stats if displacement is significant enough to avoid GPS drift
                 if (distanceInMeters > 4.0f) {
-                    distanceTraveled += (distanceInMeters / 1000.0); // Kilometreye çevir ve ekle
+                    distanceTraveled += (distanceInMeters / 1000.0);
                     lastLocation = location;
 
-                    // Arayüzü Güncelle
                     tvLiveDistance.setText(String.format(java.util.Locale.US, "%.2f km", distanceTraveled));
                     tvLiveSpeed.setText(String.format(java.util.Locale.US, "%.1f km/h", speedKmH));
                 } else if (speedKmH < 2.0f) {
-                    // Duraklama veya aşırı yavaşlama durumunda hızı sıfırla ki 60'ta takılı kalmasın
                     tvLiveSpeed.setText("0.0 km/h");
                 }
             }
         };
 
-        // 3. Spinner (Açılır Menü) ve Dinamik Arayüz Motoru
+        // Setup Exercise Type Spinner and dynamic UI logic
         String[] exerciseTypes = {"Sparring", "Heavy Bag", "Jump Rope", "Running"};
+
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, exerciseTypes);
-        spinnerAdapter.setDropDownViewResource(R.layout.spinner_item);
+        spinnerAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         spinnerExerciseType.setAdapter(spinnerAdapter);
 
         spinnerExerciseType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position <= 1) { // Sparring veya Torba
+                if (position <= 1) { // Boxing modes
                     layoutBoxingSettings.setVisibility(View.VISIBLE);
                     layoutCardioSettings.setVisibility(View.GONE);
                     layoutLiveStats.setVisibility(View.GONE);
                     tvRoundInfo.setVisibility(View.VISIBLE);
                     tvTimer.setText("03:00");
                     tvStatus.setText("READY");
-                } else { // Kardiyo Modları
+                } else { // Cardio modes
                     layoutBoxingSettings.setVisibility(View.GONE);
                     layoutCardioSettings.setVisibility(View.VISIBLE);
                     layoutLiveStats.setVisibility(View.VISIBLE);
                     tvRoundInfo.setVisibility(View.INVISIBLE);
                     tvTimer.setText("00:00");
 
-                    // RASYONEL MÜHENDİSLİK: Mesafe ve Hız yazılarının içinde bulunduğu ana sütunları (Parent) yakalıyoruz
                     View distanceColumn = (View) tvLiveDistance.getParent();
                     View speedColumn = (View) tvLiveSpeed.getParent();
 
                     if (position == 3) { // Running
                         tvStatus.setText("RUNNING MODE");
                         tvGpsWarning.setVisibility(View.VISIBLE);
-
-                        // Koşuda mesafe ve hızı göster
                         distanceColumn.setVisibility(View.VISIBLE);
                         speedColumn.setVisibility(View.VISIBLE);
-
                         checkLocationPermission();
                     } else { // Jump Rope
                         tvStatus.setText("JUMP ROPE MODE");
                         tvGpsWarning.setVisibility(View.GONE);
-
-                        // İp atlarken mesafe ve hızı ekrandan tamamen sil (Sadece Kalori kalsın)
                         distanceColumn.setVisibility(View.GONE);
                         speedColumn.setVisibility(View.GONE);
                     }
@@ -218,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        // 4. Ses Motoru (SoundPool) Kurulumu
+        // Initialize SoundPool for audio feedback
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -227,16 +224,13 @@ public class MainActivity extends AppCompatActivity {
         gongSoundId = soundPool.load(this, R.raw.boxing_gong, 1);
         warningSoundId = soundPool.load(this, R.raw.timer_warning, 1);
 
-        // 5. Buton Dinleyicileri
+        // Setup control buttons
         btnStartPause.setOnClickListener(v -> toggleTimer());
 
-// onCreate İçindeki YENİ btnReset Tıklama Olayı:
         btnReset.setOnClickListener(v -> {
             if (currentState == TimerState.WORK || currentState == TimerState.PAUSED) {
-                // İdman devam ediyorsa veya duraklatıldıysa bitirme fonksiyonunu çağır
                 finishWorkout();
             } else {
-                // Zaten hazır moddaysa sistemi sıfırla
                 resetTimer();
             }
         });
@@ -246,28 +240,30 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // 6. Zamanlayıcı ve Kalori Motoru (Akıllı Çift Mod)
+        // Main Timer Runnable handling both count-up and countdown modes
         timerRunnable = new Runnable() {
             @Override
             public void run() {
                 int currentMode = spinnerExerciseType.getSelectedItemPosition();
 
                 if (isCountUpMode) {
-                    // --- KARDİYO (İleri Sayım) ---
                     elapsedTime++;
 
-                    if (currentMode == 2) { // İp Atlama MET: 10
-                        caloriesBurned += (10.0f * 75.0f) / 3600f;
-                    } else if (currentMode == 3) { // Koşu MET: 9.8
-                        caloriesBurned += (9.8f * 75.0f) / 3600f;
-                    }
-                    tvLiveCalories.setText(String.format(Locale.US, "%d kcal", (int)caloriesBurned));
 
+                    float currentSpeed = lastLocation != null && lastLocation.hasSpeed() ? lastLocation.getSpeed() * 3.6f : 0.0f;
+
+                    if (currentSpeed > 2.0f) {
+                        if (currentMode == 2) {
+                            caloriesBurned += (10.0f * 75.0f) / 3600f;
+                        } else if (currentMode == 3) {
+                            caloriesBurned += (9.8f * 75.0f) / 3600f;
+                        }
+                    }
+
+                    tvLiveCalories.setText(String.format(Locale.US, "%d kcal", (int)caloriesBurned));
                     updateUI();
                     handler.postDelayed(this, 1000);
-
                 } else {
-                    // --- BOKS (Geri Sayım) ---
                     if (timeRemaining > 0) {
                         timeRemaining--;
                         if (timeRemaining == 10) {
@@ -284,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
-    // --- TEMEL MANTIK FONKSİYONLARI ---
+    // --- CORE LOGIC METHODS ---
 
     private void toggleTimer() {
         if (currentState == TimerState.READY || currentState == TimerState.FINISHED) {
@@ -301,14 +297,17 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             if (currentMode <= 1) {
-                // Boks Modu
                 isCountUpMode = false;
-                totalRounds = Integer.parseInt(etRounds.getText().toString());
-                roundTimeLimit = Integer.parseInt(etRoundTime.getText().toString());
-                restTimeLimit = Integer.parseInt(etRestTime.getText().toString());
+                String roundsStr = etRounds.getText().toString().trim();
+                String roundTimeStr = etRoundTime.getText().toString().trim();
+                String restTimeStr = etRestTime.getText().toString().trim();
+
+                totalRounds = roundsStr.isEmpty() ? 12 : Integer.parseInt(roundsStr);
+                roundTimeLimit = roundTimeStr.isEmpty() ? 180 : Integer.parseInt(roundTimeStr);
+                restTimeLimit = restTimeStr.isEmpty() ? 60 : Integer.parseInt(restTimeStr);
+
                 timeRemaining = roundTimeLimit;
             } else {
-                // Kardiyo Modu
                 isCountUpMode = true;
                 elapsedTime = 0;
                 distanceTraveled = 0;
@@ -318,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
                 tvLiveSpeed.setText("0.0 km/h");
             }
         } catch (NumberFormatException e) {
-            Toast.makeText(this, "Geçersiz değer girdiniz!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "You entered an invalid value!", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -334,15 +333,11 @@ public class MainActivity extends AppCompatActivity {
         handler.postDelayed(timerRunnable, 1000);
         updateUI();
 
-        // GPS'i Ateşle (Sadece Koşu ise)
         if (currentMode == 3) {
-
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 2, locationListener);
-                // startWorkout içindeki GPS bloğuna ekle:
-                Toast.makeText(this, "GPS Motoru ateşlendi, uydu bekleniyor...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "GPS engine fired, satellite awaited...", Toast.LENGTH_SHORT).show();
             }
-            // startWorkout'un en sonuna:
             lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         }
     }
@@ -355,7 +350,6 @@ public class MainActivity extends AppCompatActivity {
         btnStartPause.setText("RESUME");
         btnStartPause.setBackgroundTintList(getResources().getColorStateList(android.R.color.holo_green_dark, null));
 
-        // GPS'i Uyut
         if (locationManager != null) {
             locationManager.removeUpdates(locationListener);
         }
@@ -369,7 +363,6 @@ public class MainActivity extends AppCompatActivity {
 
         handler.postDelayed(timerRunnable, 1000);
 
-        // GPS'i Uyandır (Sadece Koşu ise)
         if (spinnerExerciseType.getSelectedItemPosition() == 3 && currentState == TimerState.WORK) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 2, locationListener);
@@ -383,9 +376,10 @@ public class MainActivity extends AppCompatActivity {
         currentState = TimerState.READY;
         currentRound = 1;
 
-        // Ekranı varsayılana döndür
         if (spinnerExerciseType.getSelectedItemPosition() <= 1) {
-            timeRemaining = Integer.parseInt(etRoundTime.getText().toString());
+            // Assign default value to prevent crash if input is empty
+            String roundTimeStr = etRoundTime.getText().toString().trim();
+            timeRemaining = roundTimeStr.isEmpty() ? 180 : Integer.parseInt(roundTimeStr);
         } else {
             elapsedTime = 0;
         }
@@ -440,7 +434,7 @@ public class MainActivity extends AppCompatActivity {
         showWorkoutSummaryDialog();
     }
 
-    // --- YARDIMCI FONKSİYONLAR ---
+    // --- HELPER FUNCTIONS ---
 
     private void updateUI() {
         int minutes, seconds;
@@ -469,13 +463,30 @@ public class MainActivity extends AppCompatActivity {
             tvStatus.setTextColor(getResources().getColor(android.R.color.holo_orange_light, null));
         }
 
-        // Akıllı Buton Değişimi
         if (currentState == TimerState.WORK || currentState == TimerState.PAUSED) {
             btnReset.setText("FINISH & SAVE");
             btnReset.setBackgroundTintList(getResources().getColorStateList(android.R.color.holo_blue_dark, null));
         } else {
             btnReset.setText("RESET");
             btnReset.setBackgroundTintList(getResources().getColorStateList(android.R.color.holo_red_dark, null));
+        }
+
+        // Manage navigation buttons visibility based on timer state
+        switch (currentState) {
+            case READY:
+            case PAUSED:
+                btnTopBack.setVisibility(View.VISIBLE);
+                btnReturnToMainMenu.setVisibility(View.GONE);
+                break;
+            case WORK:
+            case REST:
+                btnTopBack.setVisibility(View.GONE);
+                btnReturnToMainMenu.setVisibility(View.GONE);
+                break;
+            case FINISHED:
+                btnTopBack.setVisibility(View.GONE);
+                btnReturnToMainMenu.setVisibility(View.VISIBLE);
+                break;
         }
     }
 
@@ -496,50 +507,41 @@ public class MainActivity extends AppCompatActivity {
         handler.removeCallbacks(timerRunnable);
     }
 
-    // --- VERİTABANI İŞLEMLERİ ---
+    // --- DATABASE OPERATIONS ---
 
     private void showWorkoutSummaryDialog() {
         int currentMode = spinnerExerciseType.getSelectedItemPosition();
 
-        // 1. RASYONEL KONTROL: Eğer mod Sparring(0) veya Heavy Bag(1) ise bu pencereyi HİÇ AÇMA.
-        // Kullanıcı zaten WORKOUT COMPLETE yazısını görecek, işi bitince RESET'e basacak.
         if (currentMode <= 1) {
             return;
         }
 
-        // Sadece Kardiyo (2 ve 3) ise pencereyi kurmaya başla
         android.app.Dialog dialog = new android.app.Dialog(this);
         dialog.setContentView(R.layout.dialog_workout_summary);
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         dialog.setCancelable(false);
 
-        // Arayüz Elemanlarını Bağla
         TextView tvDialogClose = dialog.findViewById(R.id.tvDialogClose);
         TextView tvDialogTime = dialog.findViewById(R.id.tvDialogTime);
         TextView tvDialogDistance = dialog.findViewById(R.id.tvDialogDistance);
         TextView tvDialogSpeed = dialog.findViewById(R.id.tvDialogSpeed);
         TextView tvDialogCalories = dialog.findViewById(R.id.tvDialogCalories);
 
-        // Gizlemek/Göstermek için başlıkları (Label) bağla
         TextView tvLabelDistance = dialog.findViewById(R.id.tvLabelDistance);
         TextView tvLabelSpeed = dialog.findViewById(R.id.tvLabelSpeed);
 
-        // Ortak Veriler: Süre ve Kalori her iki kardiyoda da var
         int minutes = elapsedTime / 60;
         int seconds = elapsedTime % 60;
         tvDialogTime.setText(String.format(Locale.US, "%02d:%02d", minutes, seconds));
         tvDialogCalories.setText(String.format(Locale.US, "%d kcal", (int)caloriesBurned));
 
-        // 2. BAĞLAMSAL FİLTRELEME
         if (currentMode == 2) {
-            // İP ATLAMA: Mesafe ve Hız saçmalığı ekrandan tamamen silinir (GONE)
             tvLabelDistance.setVisibility(View.GONE);
             tvDialogDistance.setVisibility(View.GONE);
             tvLabelSpeed.setVisibility(View.GONE);
             tvDialogSpeed.setVisibility(View.GONE);
 
         } else if (currentMode == 3) {
-            // KOŞU: Mesafe ve Hız hesaplanıp ekrana yazdırılır
             float totalHours = elapsedTime / 3600.0f;
             float avgSpeedKmH = 0.0f;
             if (totalHours > 0 && distanceTraveled > 0) {
@@ -549,10 +551,8 @@ public class MainActivity extends AppCompatActivity {
             tvDialogSpeed.setText(String.format(Locale.US, "%.1f km/h", avgSpeedKmH));
         }
 
-        // X Butonu Olayı
         tvDialogClose.setOnClickListener(v -> {
             dialog.dismiss();
-            resetTimer();
         });
 
         dialog.show();
@@ -566,9 +566,9 @@ public class MainActivity extends AppCompatActivity {
             int currentMode = spinnerExerciseType.getSelectedItemPosition();
             int totalDurationMinutes;
 
-            if (currentMode <= 1) { // Boks süresi hesaplama
+            if (currentMode <= 1) {
                 totalDurationMinutes = (totalRounds * roundTimeLimit) / 60;
-            } else { // Kardiyo süresi hesaplama
+            } else {
                 totalDurationMinutes = elapsedTime / 60;
             }
 
@@ -586,7 +586,6 @@ public class MainActivity extends AppCompatActivity {
                 detailValues.put("session_id", sessionId);
                 detailValues.put("exercise_type_id", currentMode + 1);
 
-                // Boks ise raund sayısı, kardiyo ise 1 yazıyoruz
                 detailValues.put("volume", (currentMode <= 1) ? totalRounds : 1);
                 detailValues.put("duration", totalDurationMinutes);
                 detailValues.put("distance", distanceTraveled);
@@ -614,7 +613,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // --- GPS İZİN YÖNETİMİ ---
+    // --- LOCATION PERMISSION MANAGEMENT ---
 
     private void checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -629,9 +628,9 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "GPS İzni Alındı! Koşuya hazırız.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "GPS permission obtained! We're ready for the run.", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "GPS İzni Reddedildi! Koşuda mesafe ölçülemez.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "GPS permission denied! Distance cannot be measured during running.", Toast.LENGTH_LONG).show();
             }
         }
     }

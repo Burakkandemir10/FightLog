@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#121212"
+    android:background="@color/bg_main_dark"
     android:padding="30dp"
     android:gravity="center">
 
@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="FIGHTLOG"
-        android:textColor="#FF9800"
+        android:textColor="@color/accent_orange"
         android:textSize="42sp"
         android:textStyle="bold"
         android:letterSpacing="0.1"
@@ -21,7 +21,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="WELCOME!"
-        android:textColor="#B0B0B0"
+        android:textColor="@color/text_secondary"
         android:textSize="18sp"
         android:layout_marginBottom="50dp"/>
 
@@ -30,8 +30,8 @@
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:text="START NEW WORKOUT"
-        android:backgroundTint="#4CAF50"
-        android:textColor="#FFFFFF"
+        android:backgroundTint="@color/status_ready_green"
+        android:textColor="@color/text_primary"
         android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginBottom="20dp"/>
@@ -41,8 +41,8 @@
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:text="WORKOUT HISTORY"
-        android:backgroundTint="#2196F3"
-        android:textColor="#FFFFFF"
+        android:backgroundTint="@color/status_rest_blue"
+        android:textColor="@color/text_primary"
         android:textSize="16sp"
         android:textStyle="bold"/>
 

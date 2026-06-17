@@ -1,57 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#121212"
-    android:padding="20dp"
-    android:gravity="center_horizontal"
-    tools:ignore="HardcodedText,Autofill,LabelFor,SpeakableTextPresentCheck,TouchTargetSizeCheck">
+    android:fillViewport="true"
+    android:background="@color/bg_main_dark">
 
     <LinearLayout
-        android:id="@+id/layoutSettings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
         android:orientation="vertical"
-        android:background="#1E1E1E"
-        android:padding="16dp"
-        android:layout_marginBottom="20dp">
+        android:padding="16dp">
 
-        <TextView
+        <Button
+            android:id="@+id/btnTopBack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="WORKOUT SETTINGS"
-            android:textColor="#FF9800"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"/>
+            android:layout_gravity="start"
+            android:backgroundTint="@color/btn_dark_gray"
+            android:text="← BACK"
+            android:textColor="@color/text_primary"
+            android:layout_marginBottom="16dp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
+            android:background="@color/bg_card_dark"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="24dp">
+
             <TextView
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Workout Type:"
-                android:textColor="#FFFFFF"/>
-            <Spinner
-                android:id="@+id/spinnerExerciseType"
-                android:layout_width="140dp"
-                android:layout_height="48dp"
-                android:backgroundTint="#FFFFFF"
-                android:popupBackground="#1E1E1E"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/layoutBoxingSettings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+                android:text="WORKOUT SETTINGS"
+                android:textColor="@color/accent_orange"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -59,201 +46,196 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:layout_marginBottom="8dp">
+
                 <TextView
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Total Rounds:"
-                    android:textColor="#FFFFFF"/>
+                    android:text="Workout Type:"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:layout_marginEnd="16dp"/>
+
+                <Spinner
+                    android:id="@+id/spinnerExerciseType"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:backgroundTint="@color/text_primary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutBoxingSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
                 <EditText
                     android:id="@+id/etRounds"
-                    android:layout_width="80dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                    android:inputType="number"
-                    android:text="12"
-                    android:textColor="#FFFFFF"
-                    android:gravity="center"/>
-            </LinearLayout>
+                    android:hint="Rounds (e.g. 12)"
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
+                    android:inputType="number" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Round Time (Sec):"
-                    android:textColor="#FFFFFF"/>
                 <EditText
                     android:id="@+id/etRoundTime"
-                    android:layout_width="80dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                    android:inputType="number"
-                    android:text="180"
-                    android:textColor="#FFFFFF"
-                    android:gravity="center"/>
+                    android:hint="Round Time in Sec (e.g. 180)"
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
+                    android:inputType="number" />
+
+                <EditText
+                    android:id="@+id/etRestTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Rest Time in Sec (e.g. 60)"
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
+                    android:inputType="number" />
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/layoutCardioSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvGpsWarning"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🏃 GPS is active. Distance, speed, and calories will be tracked."
+                    android:textColor="@color/status_ready_green"
+                    android:textSize="14sp"
+                    android:textStyle="italic"
+                    android:layout_marginTop="8dp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/bg_card_dark"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="READY"
+                android:textColor="@color/status_ready_green"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:textAllCaps="true"
+                android:layout_marginBottom="12dp"/>
+
+            <TextView
+                android:id="@+id/tvRoundInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Round 1 / 12"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:visibility="gone"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:id="@+id/tvTimer"
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:gravity="center"
+                android:maxLines="1"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="40sp"
+                app:autoSizeMaxTextSize="120sp"
+                app:autoSizeStepGranularity="2sp"
+                android:text="00:00"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:layout_marginBottom="24dp"/>
+
+            <LinearLayout
+                android:id="@+id/layoutLiveStats"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
-                <TextView
+                android:weightSum="3"
+                android:baselineAligned="false">
+
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Rest Time (Sec):"
-                    android:textColor="#FFFFFF"/>
-                <EditText
-                    android:id="@+id/etRestTime"
-                    android:layout_width="80dp"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="DISTANCE"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/tvLiveDistance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0.00 km"
+                        android:textColor="@color/text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                    android:inputType="number"
-                    android:text="60"
-                    android:textColor="#FFFFFF"
-                    android:gravity="center"/>
-            </LinearLayout>
-        </LinearLayout>
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CALORIES"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/tvLiveCalories"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 kcal"
+                        android:textColor="@color/text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/layoutCardioSettings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone"
-            android:layout_marginTop="5dp">
-
-            <TextView
-                android:id="@+id/tvGpsWarning"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="🏃 GPS is active. Distance, speed, and calories will be tracked."
-                android:textColor="#4CAF50"
-                android:textSize="12sp"
-                android:visibility="gone"
-                android:layout_marginTop="10dp"
-                android:textStyle="italic"/>
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="#1E1E1E"
-        android:padding="20dp">
-
-        <TextView
-            android:id="@+id/tvStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="READY"
-            android:textColor="#4CAF50"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="10dp"/>
-
-        <TextView
-            android:id="@+id/tvRoundInfo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Round 1 / 12"
-            android:textColor="#B0B0B0"
-            android:textSize="20sp"
-            android:layout_marginBottom="20dp"/>
-
-        <TextView
-            android:id="@+id/tvTimer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="00:00"
-            android:textColor="#FFFFFF"
-            android:textSize="80sp"
-            android:textStyle="bold"
-            android:fontFamily="monospace"
-            android:layout_marginBottom="30dp"/>
-
-        <LinearLayout
-            android:id="@+id/layoutLiveStats"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="20dp"
-            android:visibility="gone">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="DISTANCE"
-                    android:textColor="#B0B0B0"
-                    android:textSize="12sp"/>
-                <TextView
-                    android:id="@+id/tvLiveDistance"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0.00 km"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
-                    android:textStyle="bold"/>
-            </LinearLayout>
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SPEED"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                    <TextView
+                        android:id="@+id/tvLiveSpeed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0.0 km/h"
+                        android:textColor="@color/text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="CALORIES"
-                    android:textColor="#B0B0B0"
-                    android:textSize="12sp"/>
-                <TextView
-                    android:id="@+id/tvLiveCalories"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0 kcal"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
-                    android:textStyle="bold"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="SPEED"
-                    android:textColor="#B0B0B0"
-                    android:textSize="12sp"/>
-                <TextView
-                    android:id="@+id/tvLiveSpeed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0.0 km/h"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
-                    android:textStyle="bold"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -261,51 +243,55 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center">
+            android:weightSum="2"
+            android:layout_marginBottom="16dp">
 
             <Button
                 android:id="@+id/btnStartPause"
-                android:layout_width="140dp"
+                android:layout_width="0dp"
                 android:layout_height="60dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="@color/status_ready_green"
                 android:text="START"
-                android:backgroundTint="#4CAF50"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginEnd="10dp"/>
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/btnReset"
-                android:layout_width="140dp"
+                android:layout_width="0dp"
                 android:layout_height="60dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:backgroundTint="@color/status_reset_red"
                 android:text="RESET"
-                android:backgroundTint="#E53935"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"/>
-
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <Button
             android:id="@+id/btnHistory"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:layout_marginTop="15dp"
+            android:backgroundTint="@color/status_rest_blue"
             android:text="VIEW HISTORY"
-            android:backgroundTint="#2196F3"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold"/>
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <Button
-            android:id="@+id/btnBackToHome"
+            android:id="@+id/btnReturnToMainMenu"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_height="60dp"
+            android:backgroundTint="@color/btn_dark_gray"
             android:text="RETURN TO MAIN MENU"
-            android:backgroundTint="#333333"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
+
     </LinearLayout>
-</LinearLayout>
+</ScrollView>

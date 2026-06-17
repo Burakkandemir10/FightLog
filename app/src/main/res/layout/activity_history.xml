@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#121212"
+    android:background="@color/bg_main_dark"
     android:padding="20dp">
 
     <LinearLayout
@@ -18,8 +18,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="BACK"
-            android:backgroundTint="#424242"
-            android:textColor="#FFFFFF"
+            android:backgroundTint="@color/gray_surface"
+            android:textColor="@color/text_primary"
             android:textStyle="bold"
             android:layout_marginEnd="15dp"/>
 
@@ -27,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="WORKOUT HISTORY"
-            android:textColor="#FF9800"
+            android:textColor="@color/accent_orange"
             android:textSize="22sp"
             android:textStyle="bold"/>
     </LinearLayout>
@@ -36,7 +36,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="#2C2C2C"
+        android:background="@color/bg_dashboard"
         android:padding="15dp"
         android:layout_marginBottom="15dp"
         android:baselineAligned="false">
@@ -51,14 +51,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="SESSIONS"
-                android:textColor="#B0B0B0"
+                android:textColor="@color/text_secondary"
                 android:textSize="12sp"/>
             <TextView
                 android:id="@+id/tvTotalSessions"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 android:textStyle="bold"/>
         </LinearLayout>
@@ -73,14 +73,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="VOLUME"
-                android:textColor="#B0B0B0"
+                android:textColor="@color/text_secondary"
                 android:textSize="12sp"/>
             <TextView
                 android:id="@+id/tvTotalVolume"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 android:textStyle="bold"/>
         </LinearLayout>
@@ -95,14 +95,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="MINUTES"
-                android:textColor="#B0B0B0"
+                android:textColor="@color/text_secondary"
                 android:textSize="12sp"/>
             <TextView
                 android:id="@+id/tvTotalMinutes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 android:textStyle="bold"/>
         </LinearLayout>
@@ -112,8 +112,8 @@
         android:id="@+id/listViewHistory"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:divider="#424242"
+        android:divider="@color/gray_surface"
         android:dividerHeight="1dp"
-        android:background="#1E1E1E"/>
+        android:background="@color/bg_card_dark"/>
 
 </LinearLayout>

@@ -16,13 +16,13 @@ public class HomeActivity extends AppCompatActivity {
         Button btnNewWorkout = findViewById(R.id.btnNewWorkout);
         Button btnViewHistoryFromHome = findViewById(R.id.btnViewHistoryFromHome);
 
-        // Yeni İdmana Tıklayınca -> MainActivity (Sayaç Ekranı) Açılır
+        // Navigate to MainActivity to start a new workout session
         btnNewWorkout.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, MainActivity.class);
             startActivity(intent);
         });
 
-        // Geçmişe Tıklayınca -> HistoryActivity (İstatistikler) Açılır
+        // Navigate to HistoryActivity to view workout logs and statistics
         btnViewHistoryFromHome.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, HistoryActivity.class);
             startActivity(intent);
